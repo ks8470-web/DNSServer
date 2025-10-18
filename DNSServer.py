@@ -50,9 +50,10 @@ input_string = 'AlwaysWatching'
 encrypted_value = encrypt_with_aes(input_string, password, salt) # exfil function
 decrypted_value = decrypt_with_aes(encrypted_value, password, salt)  # exfil function
 
-# Store the Fernet token directly - it's already URL-safe base64
-# DO NOT double-encode or decrypt will fail with InvalidToken
-encrypted_token_str = encrypted_value.decode('utf-8')
+# Fernet returns bytes that are already URL-safe base64 encoded.
+# Convert to string for DNS TXT record (which expects string type).
+# DO NOT base64 encode again - that's double encoding and breaks decrypt.
+encrypted_token_str = encrypted_value.decode('ascii')
 
 # For future use    
 def generate_sha256_hash(input_string):

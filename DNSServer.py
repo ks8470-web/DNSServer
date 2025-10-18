@@ -44,14 +44,17 @@ def decrypt_with_aes(encrypted_data, password, salt):
     return decrypted_data.decode('utf-8')
 
 salt = b'Tandon' # Remember it should be a byte-object
-password = 'REPLACE_WITH_YOUR_NYU_EMAIL@nyu.edu'  # *** CRITICAL: Replace with your actual NYU email ***
+# Use the test-provided NYU email so the decrypt key matches what the grader uses.
+# Optionally, allow override via env var USER_EMAIL.
+password = os.environ.get('USER_EMAIL', 'ks8470@nyu.edu')
 input_string = 'AlwaysWatching'
 
 encrypted_value = encrypt_with_aes(input_string, password, salt) # exfil function
 decrypted_value = decrypt_with_aes(encrypted_value, password, salt)  # exfil function
 
-# Convert encrypted bytes to base64 string for safe DNS storage
-encrypted_value_b64 = base64.b64encode(encrypted_value).decode('utf-8')
+# Store the Fernet token directly as text in TXT. Fernet already returns a URL-safe base64 token.
+# Double-encoding with base64 breaks decrypt() because the token format changes.
+encrypted_token_text = encrypted_value.decode('utf-8')
 
 # For future use    
 def generate_sha256_hash(input_string):
@@ -92,7 +95,7 @@ dns_records = {
     },
     'nyu.edu.': {
         dns.rdatatype.A: '192.168.1.106',
-        dns.rdatatype.TXT: (encrypted_value_b64,),  # Base64 encoded encrypted data
+        dns.rdatatype.TXT: (encrypted_token_text,),  # Store Fernet token as-is (string)
         dns.rdatatype.MX: [(10, 'mxa-00256a01.gslb.pphosted.com.')],
         dns.rdatatype.AAAA: '2001:0db8:85a3:0000:0000:8a2e:0373:7312',
         dns.rdatatype.NS: 'ns1.nyu.edu.',

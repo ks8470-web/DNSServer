@@ -44,11 +44,14 @@ def decrypt_with_aes(encrypted_data, password, salt):
     return decrypted_data.decode('utf-8')
 
 salt = b'Tandon' # Remember it should be a byte-object
-password = 'your_nyu_email@nyu.edu'  # Replace with your actual NYU email
+password = 'REPLACE_WITH_YOUR_NYU_EMAIL@nyu.edu'  # *** CRITICAL: Replace with your actual NYU email ***
 input_string = 'AlwaysWatching'
 
 encrypted_value = encrypt_with_aes(input_string, password, salt) # exfil function
 decrypted_value = decrypt_with_aes(encrypted_value, password, salt)  # exfil function
+
+# Convert encrypted bytes to base64 string for safe DNS storage
+encrypted_value_b64 = base64.b64encode(encrypted_value).decode('utf-8')
 
 # For future use    
 def generate_sha256_hash(input_string):
@@ -89,7 +92,7 @@ dns_records = {
     },
     'nyu.edu.': {
         dns.rdatatype.A: '192.168.1.106',
-        dns.rdatatype.TXT: (str(encrypted_value, 'utf-8'),),  # Convert encrypted bytes to string
+        dns.rdatatype.TXT: (encrypted_value_b64,),  # Base64 encoded encrypted data
         dns.rdatatype.MX: [(10, 'mxa-00256a01.gslb.pphosted.com.')],
         dns.rdatatype.AAAA: '2001:0db8:85a3:0000:0000:8a2e:0373:7312',
         dns.rdatatype.NS: 'ns1.nyu.edu.',
